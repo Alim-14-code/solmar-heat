@@ -958,6 +958,13 @@ export function createWorld(random, city) {
     state.camera.x += (tx - state.camera.x) * Math.min(1, dt * 5);
     state.camera.y += (ty - state.camera.y) * Math.min(1, dt * 5);
 
+    // Car-car shunts move the player's car after the drive step ran: keep
+    // the player glued to the car they are driving.
+    if (player.inCar) {
+      player.x = player.inCar.x;
+      player.y = player.inCar.y;
+    }
+
     if (player.health <= 0) events |= EVENT_WASTED;
     return events;
   }

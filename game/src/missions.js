@@ -113,6 +113,12 @@ function startStep(world, mission, stepIndex) {
     m.step.radius = Math.max(step.radius || 70, Math.hypot(lm.w, lm.h) / 2 + 40);
   }
   if (step.kind === 'pickup') {
+    // The landmark can be a building: a package at its centre sits inside
+    // the walls, and the player can never reach it (buildings push the
+    // player out, collect radius is 30). Put it on the street outside.
+    const lm = world.city.landmarks[step.at];
+    m.step.x = lm.x;
+    m.step.y = nearestRoadCoord(lm.y);
     world.spawnPickup(m.step.x, m.step.y, 'package', 0);
   }
   if (step.kind === 'survive' || step.kind === 'escape' || step.kind === 'kill') {
@@ -140,9 +146,13 @@ function startStep(world, mission, stepIndex) {
     m.stepState.spawned = true;
   }
   if (step.kind === 'steal') {
-    // Make sure a Diablo exists nearby: park one a few blocks from the player.
+    // Make sure a Diablo exists nearby: park one a few blocks from the
+    // player, on a road. The raw offset can land inside a building, where
+    // the car can never be reached.
     const p = s.player;
-    world.makeCar(p.x + 260, p.y - 180, 0, step.model, 'parked');
+    const cx = Math.max(80, Math.min(world.city.size - 80, p.x + 260));
+    const cy = nearestRoadCoord(p.y - 180);
+    world.makeCar(cx, cy, 0, step.model, 'parked');
     world.addMessage(`A ${CAR_MODELS[step.model].name} is parked nearby — take it`, '#ffd23f');
   }
   world.addMessage(step.label, '#ffd23f');
